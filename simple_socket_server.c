@@ -7,7 +7,7 @@
 
 int main() {
   // Create a socket
-  int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+  int serverSocket = socket(PF_INET, SOCK_STREAM, 0);
   if (serverSocket == -1) {
     perror("Error creating socket");
     return -1;
@@ -19,6 +19,12 @@ int main() {
   serverAddress.sin_port = htons(8080);  // Port number
   serverAddress.sin_addr.s_addr = INADDR_ANY;
 
+  int reuse = 1;
+  if (setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse,
+                 sizeof(int)) != 0) {
+    puts("Can't set the reuse option on the socket");
+    return EXIT_FAILURE;
+  }
   // Bind the socket to the specified address and port
   if (bind(serverSocket, (struct sockaddr*)&serverAddress,
            sizeof(serverAddress)) < 0) {

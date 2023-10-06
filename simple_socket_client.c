@@ -1,4 +1,4 @@
-#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +7,7 @@
 
 int main() {
   // Create a socket
-  int clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+  int clientSocket = socket(PF_INET, SOCK_STREAM, 0);
   printf("clientSocket: %d\n", clientSocket);
   if (clientSocket <= 0) {
     perror("Error creating socket");
@@ -18,13 +18,16 @@ int main() {
   struct sockaddr_in serverAddress;
   serverAddress.sin_family = AF_INET;
   serverAddress.sin_port = htons(8080);  // Port number
-  serverAddress.sin_addr.s_addr =
-      INADDR_LOOPBACK;  // Use 127.0.0.1 for local testing
+  //  serverAddress.sin_addr.s_addr = INADDR_LOOPBACK;
+  if (inet_pton(AF_INET, "192.168.8.163", &serverAddress.sin_addr) <= 0) {
+    printf("Invalid address or address not supported\n");
+    return -1;
+  }
 
   // Connect to the server
   puts("Connecting to server...");
   int status = connect(clientSocket, (struct sockaddr*)&serverAddress,
-              sizeof(serverAddress));
+                       sizeof(serverAddress));
   printf("status: %d\n", status);
   if (status < 0) {
     perror("Error connecting to server");
@@ -33,11 +36,10 @@ int main() {
   } else {
     puts("Connected to server");
   }
-  
 
   // Receive data from the server
   char buffer[1024];
-  ssize_t bytesRead = recv(clientSocket, buffer, sizeof(buffer), 0);
+  ssize_t bytesRead = recv(clientSocket, buffer, 1024, 0);
   if (bytesRead == -1) {
     perror("Error receiving data");
     close(clientSocket);
